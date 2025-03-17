@@ -1,0 +1,21 @@
+-- Step 1: Create a new table with a hash column
+create or replace table t_temp_with_hash as
+select c1, sha2(c1::string, 256) as hash_value
+from t_temp;
+
+-- Step 2: Identify and delete duplicates
+-- Create a temporary table to store unique records
+create or replace table t_temp_unique as
+select c1
+from (
+    select c1, hash_value, row_number() over (partition by hash_value order by c1) as row_num
+    from t_temp_with_hash
+) where row_num = 1;
+
+-- Step 3: Replace the original table with the new table containing unique records
+create or replace table t_temp as
+select * from t_temp_unique;
+
+-- Step 4: Drop the temporary tables
+drop table t_temp_with_hash;
+drop table t_temp_unique;

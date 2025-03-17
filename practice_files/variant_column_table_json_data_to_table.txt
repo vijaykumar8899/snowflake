@@ -1,0 +1,38 @@
+step1 : CREATE OR REPLACE TABLE t_sample(c1 VARIANT);
+step2 : insert json into table 
+INSERT INTO t_sample(c1 ) select PARSE_JSON('{
+    "name": "John",
+    "age": 25,
+    "city": "Sampleville",
+    "married": false,
+    "hobbies": ["reading", "traveling", "programming"],
+    "address": {
+      "street": "123 Main Street",
+      "city": "Sample City",
+      "postal_code": "12345"
+    }
+  }');
+  
+step4 : SELECT c1:name::String AS name FROM t_sample;
+		OUTPUT : John
+		
+step5 : To convert json into table use lateral flattern function. 
+			select t.$1:name::string as Name,
+			t.$1:age::number as Age,
+			t.$1:city::varchar as City,
+			t.$1:married::varchar as Married,
+			LISTAGG(s.value::VARCHAR, ', ') AS Hobbies,
+			t.$1:address.street::VARCHAR AS Street,
+			t.$1:address.city::VARCHAR AS Address_City,
+			t.$1:address.postal_code::VARCHAR AS Postal_Code
+
+			from t_sample t,
+			lateral flatten(t.$1:hobbies) s,
+			GROUP BY 
+				Name, Age, City, Married, Street, Address_City, Postal_Code;
+			;
+
+
+			OUTPUT
+			NAME	AGE	CITY	MARRIED	HOBBIES	STREET	ADDRESS_CITY	POSTAL_CODE
+			John	25	Sampleville	false	reading, traveling, programming	123 Main Street	Sample City	12345

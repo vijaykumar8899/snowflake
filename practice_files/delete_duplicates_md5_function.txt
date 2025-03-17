@@ -1,0 +1,38 @@
+create or replace table t_temp ( c1 number);
+
+insert into t_temp values 
+(1),
+(1),
+(2),
+(2),
+(3),
+(3);
+
+
+-- Step 1: Create a new table with a hash column
+create or replace table t_temp_with_hash as
+select c1, md5(c1::string) as hash_value
+from t_temp;
+--1 c4ca4238a0b923820dcc509a6f75849b
+--1 c4ca4238a0b923820dcc509a6f75849b
+--2 c81e728d9d4c2f636f067f89cc14862c
+
+-- Step 2: Identify and delete duplicates
+-- Create a temporary table to store unique records
+create or replace table t_temp_unique as
+select c1
+from (
+    select c1, hash_value, row_number() over (partition by hash_value order by c1) as row_num
+    from t_temp_with_hash
+) where row_num = 1;
+
+-- Step 3: Replace the original table with the new table containing unique records
+create or replace table t_temp as
+select * from t_temp_unique;
+
+-- Step 4: Drop the temporary tables
+drop table t_temp_with_hash;
+drop table t_temp_unique;
+
+
+select * from t_temp;

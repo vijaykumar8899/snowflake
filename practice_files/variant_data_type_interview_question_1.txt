@@ -1,0 +1,8 @@
+CREATE OR REPLACE TABLE employee_data (     id INT,     name STRING,    details VARIANT );INSERT INTO employee_data VALUES(1, 'John', '[{"skill": "SQL", "experience": 5}, {"skill": "Python", "experience": 3}]'), (2, 'Alice', '[{"skill": "Java", "experience": 4}, {"skill": "Scala", "experience": 2}]');
+
+Output:
+id	name	skill	experience
+1	John	SQL	5
+1	John	Python	3
+2	Alice	Java	4
+2	Alice	Scala	2
