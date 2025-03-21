@@ -1,0 +1,50 @@
+--Create a procedure to load primary key / empno value in emp table;
+create or replace table emp(empno number,loaded_at timestamp);
+
+--Normal way
+create or replace procedure add_data_to_emp()
+returns varchar
+language sql
+as
+$$
+
+BEGIN
+    TRUNCATE TABLE emp;
+
+    FOR i in 1 to 10 LOOP
+        insert into empp (empno, loaded_at) values(:i,current_timestamp());
+    END LOOP;
+
+    return 'SUCCESS';
+
+exception
+    when other then
+        return object_construct('sqlcode', sqlcode, 'sqlerrm', sqlerrm, 'sqlstate', sqlstate);
+end;
+$$;
+
+
+call add_data_to_emp();
+select * from emp;
+
+
+--Optimal way
+create or replace procedure add_data_to_emp()
+returns varchar
+language sql
+as
+$$
+begin
+    truncate table emp;
+
+    insert into emp (empno, loaded_at)
+    select row_number() over (order by seq4()) as empno, current_timestamp()
+    from table(generator(rowcount => 10));
+
+    return 'SUCCESS';
+
+exception
+    when other then
+        return object_construct('sqlcode', sqlcode, 'sqlerrm', sqlerrm, 'sqlstate', sqlstate);
+end;
+$$;
